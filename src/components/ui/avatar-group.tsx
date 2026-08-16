@@ -1,0 +1,61 @@
+import { cn } from '@/lib/cn';
+import { Avatar, type AvatarProps } from '@/components/ui/avatar';
+
+/**
+ * AvatarGroup — overlapping member avatars with a `+N` overflow chip. Each
+ * avatar gets a surface ring so the stack reads cleanly.
+ *
+ * ONE initial per avatar in the stack, not two. A stack overlaps each avatar by
+ * about a quarter of its width, so the right-hand character of a two-letter
+ * monogram is covered by the neighbour on top of it — "MO · RS · DL" rendered as
+ * "M( · R( · DL", which looks like a clipping bug because it is one. A single
+ * letter sits in the visible left portion. A solo `Avatar`, with nothing on top
+ * of it, still shows both.
+ */
+export interface AvatarGroupMember {
+  name: string;
+  tint?: string;
+}
+
+export function AvatarGroup({
+  members,
+  max = 3,
+  size = 'sm',
+  className,
+}: {
+  members: AvatarGroupMember[];
+  /** Max avatars shown before collapsing to `+N`. */
+  max?: number;
+  size?: AvatarProps['size'];
+  className?: string;
+}) {
+  const shown = members.slice(0, max);
+  const extra = members.length - shown.length;
+  return (
+    <div className={cn('flex items-center', className)}>
+      {shown.map((m, i) => (
+        <Avatar
+          key={i}
+          size={size}
+          initials={m.name.trim().charAt(0) || '?'}
+          tint={m.tint}
+          aria-hidden
+          className="ring-2 ring-surface"
+          style={{ marginLeft: i === 0 ? 0 : -7 }}
+        />
+      ))}
+      {extra > 0 ? (
+        // Hidden like the avatars it follows. Every avatar in this stack is decorative, so
+        // announcing a bare "+2" in the middle of the card's meta line ("Ada Lovelace, +2,
+        // private, 3 repos") is a fragment with nothing to attach to.
+        <span
+          aria-hidden
+          className="inline-grid size-6 place-items-center rounded-full bg-surface-2 text-[0.625rem] font-semibold text-ink-soft ring-2 ring-surface"
+          style={{ marginLeft: -7 }}
+        >
+          +{extra}
+        </span>
+      ) : null}
+    </div>
+  );
+}
